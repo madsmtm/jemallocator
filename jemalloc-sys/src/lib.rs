@@ -891,8 +891,8 @@ mod env;
 
 pub use env::*;
 
-// When using the `"unprefixed_malloc_on_supported_platforms"` feature flag,
-// the user wants us to globally override the system allocator.
+// When using the `"override"` feature flag, the user wants us to globally
+// override the system allocator.
 //
 // However, since we build `jemalloc` as a static library (an archive), the
 // linker may decide to not care about our overrides if it can't directly see
@@ -930,7 +930,7 @@ pub use env::*;
 // how this works:
 // <https://github.com/rust-lang/rust/pull/95604>
 
-#[cfg(not(prefixed))]
+#[cfg(all(feature = "override", not(target_vendor = "apple")))]
 mod set_up_statics {
     use super::*;
 
@@ -957,10 +957,7 @@ mod set_up_statics {
 // as "used" when defined in an archive member in a static library, so we need
 // to explicitly reference the function via. Rust's `#[used]`.
 
-#[cfg(all(
-    feature = "unprefixed_malloc_on_supported_platforms",
-    target_vendor = "apple"
-))]
+#[cfg(all(feature = "override", target_vendor = "apple"))]
 #[used]
 static USED_ZONE_REGISTER: unsafe extern "C" fn() = {
     extern "C" {
